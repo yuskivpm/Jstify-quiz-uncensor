@@ -1,0 +1,32 @@
+function countUnpainted(numbers) {
+  const blacken = getLongestSequence(numbers);
+  if (blacken[0].length === numbers.length) return 0;
+  let maxUnpainted = Number.MAX_VALUE;
+  for (const blackIndexes of blacken) {
+    const rest = numbers.filter((_, index) => (index === blackIndexes[0] ? (blackIndexes.shift(), 0) : 1)).reverse();
+    if (!(maxUnpainted = Math.min(maxUnpainted, rest.length - getLongestSequence(rest, 1)))) break;
+  }
+  return maxUnpainted;
+
+  function getLongestSequence(numbers, onlyLen) {
+    const { length } = numbers;
+    const lens = Array(length).fill(1);
+    const paths = Array.from({ length }, (_, index) => [[index]]);
+    const growPath = (prevStep, curStep) => paths[prevStep].map(path => [...path, curStep]);
+    for (let curStep = 1; curStep < length; curStep++) {
+      for (let prevStep = 0; prevStep < curStep; prevStep++) {
+        if (numbers[prevStep] < numbers[curStep]) {
+          const prevLen = lens[prevStep] + 1;
+          if (prevLen > lens[curStep]) {
+            lens[curStep] = prevLen;
+            paths[curStep] = growPath(prevStep, curStep);
+          } else if (prevLen === lens[curStep]) {
+            paths[curStep].push(...growPath(prevStep, curStep));
+          }
+        }
+      }
+    }    
+    const maxLen = Math.max(...lens);
+    return onlyLen ? maxLen : paths.filter((_, i) => lens[i] === maxLen).flat();
+  }
+}
